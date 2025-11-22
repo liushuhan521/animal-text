@@ -1,0 +1,1683 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>动物性格测试</title>
+    <style>
+        /* 全局样式 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+        }
+        
+        body {
+            background-image: linear-gradient(135deg, #8a9fd1 0%, #a07cb0 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            background-attachment: fixed;
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            animation: float 8s ease-in-out infinite;
+            z-index: 0;
+        }
+        
+        /* 全局样式继续 */
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translate(0, 0) rotate(0deg);
+            }
+            25% {
+                transform: translate(10%, 10%) rotate(5deg);
+            }
+            50% {
+                transform: translate(0, 20%) rotate(0deg);
+            }
+            75% {
+                transform: translate(-10%, 10%) rotate(-5deg);
+            }
+        }
+        
+        /* 头部样式 */
+        #test-header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        #test-header h1 {
+            color: #333;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #8a9fd1, #a07cb0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        #test-header p {
+            color: #666;
+            font-size: 1.1em;
+        }
+        
+        /* 进度条 */
+        #progress-bar {
+            height: 10px;
+            background-color: #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+        
+        #progress {
+            height: 100%;
+            background: linear-gradient(90deg, #8a9fd1, #a07cb0);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 5px;
+        }
+        
+        /* 问题区域 */
+        #question-container {
+            margin-bottom: 25px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        #question-container p {
+            font-size: 1.2em;
+            color: #333;
+            font-weight: 500;
+            line-height: 1.5;
+        }
+        
+        /* 选项区域 */
+        #options-container {
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .option {
+            background-color: #f9f9f9;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .option:hover {
+            background-color: #f0f0f0;
+            transform: translateX(5px);
+            border-color: #8a9fd1;
+        }
+        
+        .option input[type="radio"] {
+            opacity: 0;
+            position: absolute;
+        }
+        
+        .option label {
+            cursor: pointer;
+            font-size: 1em;
+            color: #555;
+            display: block;
+            padding-left: 25px;
+            position: relative;
+        }
+        
+        .option input[type="radio"]:checked + label::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            background: linear-gradient(45deg, #8a9fd1, #a07cb0);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+        }
+        
+        .option input[type="radio"]:checked + label {
+            color: #8a9fd1;
+            font-weight: 500;
+        }
+        
+        .option input[type="radio"]:checked + label::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(138, 159, 209, 0.1);
+            z-index: -1;
+        }
+        
+        /* 按钮样式 */
+        #navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+            z-index: 1;
+        }
+        
+        button {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 30px;
+            font-size: 1em;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        #prev-btn, #next-btn {
+            background-color: #8a9fd1;
+            color: white;
+        }
+        
+        #prev-btn:hover:not(:disabled), #next-btn:hover {
+            background-color: #a07cb0;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(138, 159, 209, 0.4);
+        }
+        
+        #prev-btn:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        #submit-btn {
+            background: linear-gradient(45deg, #8a9fd1, #a07cb0);
+            color: white;
+            padding: 12px 40px;
+            font-size: 1.1em;
+        }
+        
+        #submit-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(138, 159, 209, 0.4);
+        }
+        
+        /* 结果区域样式 */
+        #result-container {
+            text-align: center;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        #result-container h2 {
+            color: #5a5a5a;
+            margin-bottom: 20px;
+            font-size: 2.2em;
+            font-weight: 800;
+            text-align: center;
+        }
+        
+        #animal-image {
+            width: 220px;
+            height: 220px;
+            margin: 0 auto 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        #animal-name {
+            font-size: 3em;
+            margin-bottom: 20px;
+            font-weight: 900;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            text-align: center;
+            padding: 10px 0;
+        }
+        
+        /* 测试结果页面的动物特定颜色类 */
+        .result-tiger-color { color: #c48a57; }
+        .result-dolphin-color { color: #6a99c4; }
+        .result-owl-color { color: #71685c; }
+        .result-koala-color { color: #a58f7e; }
+        .result-peacock-color { color: #9d5a88; }
+        .result-deer-color { color: #9c8b7a; }
+        .result-meerkat-color { color: #c0a077; }
+        .result-fox-color { color: #c46e58; }
+        .result-wolf-color { color: #716e71; }
+        .result-rabbit-color { color: #d1b3a0; }
+        .result-cat-color { color: #a57b68; }
+        .result-dog-color { color: #99856e; }
+        .result-pig-color { color: #d1a093; }
+        .result-horse-color { color: #8b7f77; }
+        .result-sparrow-color { color: #717171; }
+        .result-eagle-color { color: #8f6c4b; }
+        .result-chameleon-color { color: #7c9b6c; }
+        .result-snake-color { color: #717e6e; }
+        .result-snowleopard-color { color: #a0a0a5; }
+        
+        #personality-description, #strengths, #weaknesses, #improvement-tips {
+            background-color: #f9f9f9;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 20px;
+            text-align: left;
+            border-left: 5px solid #8a9fd1;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+        }
+        
+        #personality-description h4, #strengths h4, #weaknesses h4, #improvement-tips h4 {
+            color: #5a5a5a;
+            margin-bottom: 15px;
+            font-size: 1.6em;
+            font-weight: 800;
+        }
+        
+        #personality-description p, #strengths ul, #weaknesses ul, #improvement-tips ul {
+            color: #666;
+            line-height: 1.8;
+            font-size: 1.1em;
+        }
+        
+        #strengths ul, #weaknesses ul, #improvement-tips ul {
+            padding-left: 25px;
+        }
+        
+        #strengths li, #weaknesses li, #improvement-tips li {
+            font-weight: 600;
+            margin-bottom: 10px;
+            position: relative;
+            font-size: 1.1em;
+            line-height: 1.7;
+        }
+        
+        #improvement-tips li {
+            font-weight: 700;
+            color: #666;
+        }
+        
+        #restart-btn {
+            background: linear-gradient(45deg, #8a9fd1, #a07cb0);
+            color: white;
+            margin-top: 20px;
+        }
+        
+        #restart-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* 封面样式 */
+        #cover-page {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .cover-content {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .cover-content h1 {
+            color: #333;
+            font-size: 2.8em;
+            margin-bottom: 10px;
+            background: linear-gradient(45deg, #8a9fd1, #a07cb0);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px rgba(138, 159, 209, 0.5);
+            }
+            to {
+                text-shadow: 0 0 20px rgba(138, 159, 209, 0.8), 0 0 30px rgba(160, 124, 176, 0.5);
+            }
+        }
+        
+        .cover-subtitle {
+            color: #666;
+            font-size: 1.3em;
+            margin-bottom: 40px;
+            font-weight: 500;
+        }
+        
+        .cover-animals {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+        
+        .cover-animal {
+            text-align: center;
+            transition: transform 0.3s ease;
+            position: relative;
+        }
+        
+        .cover-animal:hover {
+            transform: translateY(-10px) scale(1.1);
+        }
+        
+        .cover-animal span {
+            display: block;
+            margin-top: 10px;
+            font-weight: 500;
+            color: #333;
+            font-size: 1em;
+            transition: all 0.5s ease;
+        }
+        
+        /* 艺术化动物名称显示样式 */
+        .art-animal-name {
+            position: relative;
+            display: inline-block;
+            padding: 5px 10px;
+            transition: all 0.3s ease;
+        }
+        
+        /* 动物特定颜色类 - 低饱和度高级配色 */
+        .tiger-color {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #d4a76a; /* 低饱和虎黄色 */
+        }
+        
+        .dolphin-color {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #5a8aa6; /* 低饱和海豚蓝 */
+        }
+        
+        .owl-color {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #8a7a6a; /* 低饱和猫头鹰灰棕 */
+        }
+        
+        .koala-color {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #a69485; /* 低饱和考拉灰色 */
+        }
+        
+        .peacock-color {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #8a6a94; /* 低饱和孔雀蓝紫 */
+        }
+        
+        .deer-color {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #a69a85; /* 低饱和鹿棕 */
+        }
+        
+        .meerkat-color {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #c8a472; /* 低饱和狐獴棕黄 */
+        }
+        
+        .fox-color {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #d48c5a; /* 低饱和狐狸橙红 */
+        }
+        
+        .jackal-color {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #a68a7a; /* 低饱和豺狼灰棕 */
+        }
+        
+        .cat-color {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #948a9a; /* 低饱和猫灰 */
+        }
+        
+        .spaniel-color {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #c8a485; /* 低饱和猎犬棕 */
+        }
+        
+        .pig-color {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #d4a794; /* 低饱和猪粉 */
+        }
+        
+        .horse-color {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #a69a85; /* 低饱和马棕 */
+        }
+        
+        .sparrow-color {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #8a949a; /* 低饱和麻雀灰 */
+        }
+        
+        .eagle-color {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #8a7a5a; /* 低饱和雄鹰棕 */
+        }
+        
+        .chameleon-color {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #7a946a; /* 低饱和变色龙绿 */
+        }
+        
+        .snake-color {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #8a8a8a; /* 低饱和蛇灰 */
+        }
+        
+        .leopard-color {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #d4b794; /* 低饱和雪豹灰黄 */
+        }
+        
+        .cover-reasons {
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 40px;
+            text-align: left;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .cover-reasons h3 {
+            color: #8a9fd1;
+            margin-bottom: 15px;
+            font-size: 1.4em;
+            text-align: center;
+        }
+        
+        .cover-reasons ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        
+        .cover-reasons li {
+            padding: 10px 0 10px 30px;
+            position: relative;
+            color: #555;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        
+        .cover-reasons li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            top: 10px;
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+        }
+        
+        #start-test-btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        #start-test-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.5);
+        }
+        
+        #start-test-btn:active {
+            transform: translateY(0);
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 768px) {
+            .cover-content h1 {
+                font-size: 2.2em;
+            }
+            
+            .cover-animals {
+                gap: 20px;
+            }
+            
+            .cover-animal svg {
+                width: 60px;
+                height: 60px;
+            }
+        }
+        
+        @media (max-width: 600px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .cover-content h1 {
+                font-size: 1.8em;
+            }
+            
+            .cover-subtitle {
+                font-size: 1.1em;
+            }
+            
+            .cover-animals {
+                gap: 15px;
+            }
+            
+            .cover-animal svg {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .cover-reasons {
+                padding: 20px;
+            }
+            
+            .cover-reasons li {
+                font-size: 1em;
+            }
+            
+            #test-header h1 {
+                font-size: 2em;
+            }
+            
+            #question-container p {
+                font-size: 1.1em;
+            }
+            
+            .option {
+                padding: 12px 15px;
+            }
+            
+            button {
+                padding: 10px 20px;
+                font-size: 0.9em;
+            }
+            
+            #navigation-buttons {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            #submit-btn {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+        <div class="container">
+        <!-- 封面页面 -->
+        <div id="cover-page">
+            <div class="cover-content">
+                <h1 style="background: linear-gradient(45deg, #8a9fd1, #a07cb0); -webkit-background-clip: text; background-clip: text; color: transparent;">动物性格测试</h1>
+                <p class="cover-subtitle" style="color: #6a7db1;">探索真实的自己，发现你的动物性格类型！</p>
+                
+                <div class="cover-animals">
+                    <!-- 使用动物特定颜色类展示动物名称 -->
+                    <div class="cover-animal">
+                        <span class="art-animal-name tiger-color">老虎</span>
+                    </div>
+                    <div class="cover-animal">
+                        <span class="art-animal-name dolphin-color">海豚</span>
+                    </div>
+                    <div class="cover-animal">
+                        <span class="art-animal-name owl-color">猫头鹰</span>
+                    </div>
+                    <div class="cover-animal">
+                        <span class="art-animal-name koala-color">考拉</span>
+                    </div>
+                    <div class="cover-animal">
+                        <span class="art-animal-name peacock-color">孔雀</span>
+                    </div>
+                    <div class="cover-animal">
+                        <span class="art-animal-name deer-color">鹿</span>
+                    </div>
+                    <div class="cover-animal">
+                        <span class="art-animal-name meerkat-color">狐獴</span>
+                    </div>
+                    <div class="cover-animal">
+                        <span class="art-animal-name fox-color">狐狸</span>
+                    </div>
+                </div>
+                
+                <script>
+                    // 在页面加载时为动物名称添加随机样式
+                    document.addEventListener('DOMContentLoaded', function() {
+                        const animalNames = document.querySelectorAll('.art-animal-name');
+                        const styleClasses = ['animal-style-1', 'animal-style-2', 'animal-style-3', 'animal-style-4', 'animal-style-5'];
+                        
+                        animalNames.forEach(name => {
+                            // 随机选择一个样式类
+                            const randomClass = styleClasses[Math.floor(Math.random() * styleClasses.length)];
+                            name.classList.add(randomClass);
+                            
+                            // 添加轻微的位置随机偏移，增强艺术感
+                            const randomX = (Math.random() - 0.5) * 10;
+                            const randomY = (Math.random() - 0.5) * 5;
+                            name.style.transform += ` translate(${randomX}px, ${randomY}px)`;
+                            
+                            // 添加悬停效果
+                            name.addEventListener('mouseover', function() {
+                                this.style.transform += ' scale(1.1)';
+                                this.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.2)';
+                            });
+                            
+                            name.addEventListener('mouseout', function() {
+                                // 重置变换，保留原始旋转和位置
+                                const originalTransform = this.style.transform.replace(/ translate\([^)]*\) scale\([^)]*\)/, '');
+                                this.style.transform = originalTransform;
+                                this.style.boxShadow = '0 2px 10px rgba(0, 0, 0, 0.1)';
+                            });
+                        });
+                    });
+                </script>
+                
+                <div class="cover-reasons">
+                    <h3 style="color: #7a8ec1;">为什么要做这个测试？</h3>
+                    <p style="color: #6a7db1;">探索自我是一场永不停歇的旅程。这个动物性格测试将通过轻松有趣的方式，帮助你更深入地了解自己的内在特质。在这个过程中，你不仅能发现自己独特的优势和潜在的成长空间，还能获得对人际交往模式的新见解。每一种动物都代表着一种独特的性格能量，找到与你最匹配的那一种，或许能为你的生活和工作带来新的启示与方向。</p>
+                </div>
+                
+                <button id="start-test-btn">开始测试</button>
+            </div>
+        </div>
+        
+        <!-- 测试内容区域 -->
+        <div id="test-content" style="display: none;">
+            <div id="test-header">
+                <h1>动物性格测试</h1>
+                <p>通过回答以下问题，发现你的动物性格类型！</p>
+            </div>
+            
+            <div id="progress-bar">
+                <div id="progress"></div>
+            </div>
+            
+            <div id="question-container">
+                <!-- 问题将通过JavaScript动态显示 -->
+            </div>
+            
+            <div id="options-container">
+                <!-- 选项将通过JavaScript动态显示 -->
+            </div>
+            
+            <div id="navigation-buttons">
+                <button id="prev-btn" disabled style="margin-right: auto;">上一题</button>
+                <div>
+                    <button id="submit-btn" style="display: none;">提交测试</button>
+                </div>
+                <button id="next-btn">下一题</button>
+            </div>
+        </div>
+        
+        <div id="result-container" style="display: none;">
+            <h2>你的动物性格类型是：</h2>
+            <div id="animal-image"></div>
+            <h3 id="animal-name"></h3>
+            <div id="personality-description"></div>
+            <div id="strengths"></div>
+            <div id="weaknesses"></div>
+            <div id="improvement-tips"></div>
+            <button id="restart-btn">重新测试</button>
+        </div>
+    </div>
+    
+    <script>
+        // 测试题目数据 - 精选题库（40题）
+        const questions = [
+            // 行为模式类题目
+            { question: "当你进入一个新环境，你会先关注什么？", options: ["环境中的人及其互动", "环境的整体氛围和布局", "可能存在的潜在风险", "新奇有趣的元素"] },
+            { question: "在陌生场合迷路时，你的首选做法是？", options: ["向附近的人问路", "查看地图或导航系统", "凭直觉尝试不同方向", "停下来等待或寻求专业帮助"] },
+            { question: "如果你要组织一次朋友聚会，你会如何安排？", options: ["精心策划每个环节和流程", "确定主题后让大家自由发挥", "根据朋友喜好灵活调整计划", "交由他人主要负责，自己参与"] },
+            
+            // 思维方式类题目
+            { question: "当听到一个新观点时，你的第一反应是？", options: ["思考如何将其应用到实践中", "分析其逻辑是否合理", "比较它与自己原有观点的异同", "考虑提出这个观点的人可能的意图"] },
+            { question: "面对一个复杂问题，你倾向于？", options: ["分解为多个小问题逐一解决", "寻找整体解决方案", "先尝试几种方法看哪种有效", "寻求他人的专业建议"] },
+            { question: "你如何评估一个决策的成功与否？", options: ["最终结果是否达到预期", "过程是否符合自己的价值观", "是否获得他人的认可", "是否为未来创造了更多可能性"] },
+            
+            // 情绪处理类题目
+            { question: "当你感到非常愤怒时，你会选择？", options: ["直接表达自己的感受", "离开现场冷静后再处理", "通过运动或其他活动释放", "分析愤怒的根源并寻找解决办法"] },
+            { question: "当你感到压力很大时，你会如何缓解？", options: ["与朋友或家人倾诉", "专注于完成具体任务分散注意力", "沉浸在自己喜欢的爱好中", "反思压力来源并制定应对计划"] },
+            { question: "当你取得重要成就时，你最希望？", options: ["得到他人的认可和赞赏", "享受成功带来的满足感", "庆祝并奖励自己", "思考下一步目标"] },
+            
+            // 社交互动类题目
+            { question: "你更倾向于与哪种人建立深入关系？", options: ["能与自己思想碰撞的人", "能给予情感支持的人", "能共同体验新鲜事物的人", "能在关键时刻提供帮助的人"] },
+            { question: "在团队讨论中，如果你的想法被忽视，你会？", options: ["坚持表达直到被听取", "暂时保留，寻找更好的表达时机", "反思自己的想法是否有不足之处", "转向支持他人的观点"] },
+            { question: "当你需要拒绝他人请求时，你会？", options: ["直接但委婉地表达原因", "提供替代方案或建议", "尽量拖延以避免直接拒绝", "解释自己的困难并表达歉意"] },
+            
+            // 价值观类题目
+            { question: "你认为人生最重要的是？", options: ["不断成长和自我提升", "享受生活中的美好体验", "与他人建立深厚的连接", "为社会或他人做出贡献"] },
+            { question: "对于你来说，成功的定义是？", options: ["实现自己设定的目标", "达到社会认可的标准", "保持内心的平静与满足", "不断突破自我极限"] },
+            { question: "在道德困境中，你更倾向于遵循？", options: ["自己的内心准则", "社会普遍认可的价值观", "能带来最佳结果的选择", "公平公正的原则"] },
+            
+            // 生活方式类题目
+            { question: "你更喜欢哪种旅行方式？", options: ["自由行，无固定计划", "有详细行程的跟团游", "深度体验当地生活", "探险或极限运动类旅行"] },
+            { question: "对于饮食，你更注重？", options: ["健康和营养均衡", "味道和美食体验", "便捷和效率", "食物背后的文化和故事"] },
+            { question: "你如何看待工作与生活的关系？", options: ["工作是生活的重要组成部分", "生活优先，工作是为了更好地生活", "两者应当平衡且相互促进", "根据不同阶段灵活调整侧重点"] },
+            
+            // 趣味小众类题目
+            { question: "如果可以拥有一项超能力，你会选择？", options: ["读心术，了解他人真实想法", "瞬间移动，自由穿梭空间", "预见未来，提前做好准备", "隐身术，观察不被发现"] },
+            { question: "在选择电影时，你通常会被什么吸引？", options: ["引人深思的主题和情节", "震撼的视觉效果和动作场面", "真实感人的情感表达", "新颖独特的叙事方式"] },
+            { question: "如果你可以和历史上任何人共进晚餐，你会选择？", options: ["某个领域的伟大思想家", "改变历史进程的领导者", "艺术或文化领域的杰出人物", "有着传奇经历的普通人"] },
+            
+            // 应对挑战类题目
+            { question: "当计划被打乱时，你的反应是？", options: ["迅速调整计划以适应变化", "坚持原计划并努力克服障碍", "重新评估目标是否仍然可行", "暂时搁置，等待更好的时机"] },
+            { question: "面对你不擅长的任务，你会？", options: ["全力以赴学习并尝试", "寻求专业帮助或合作", "寻找替代方法达成目标", "诚实地承认不足并拒绝"] },
+            { question: "如果你发现自己犯了错误，你会？", options: ["立即承认并承担责任", "先尝试补救再沟通", "分析原因避免再次发生", "视情况决定是否需要公开"] },
+            
+            // 自我认知类题目
+            { question: "你认为自己最显著的特点是？", options: ["直觉敏锐，善于洞察", "理性客观，逻辑清晰", "热情友善，善于交际", "坚韧不拔，目标明确"] },
+            { question: "你更偏好哪种反馈方式？", options: ["直接具体的批评和建议", "肯定优点后再指出不足", "通过提问引导我自己发现问题", "观察他人如何处理类似情况"] },
+            { question: "你通常如何了解自己的情绪状态？", options: ["通过身体感受和直觉", "分析自己的行为和反应", "与他人交流后获得反馈", "记录和反思日常经历"] },
+            
+            // 人际互动类题目
+            { question: "在与人交谈时，你更关注什么？", options: ["对方表达的内容和观点", "对方的肢体语言和情绪", "对话的整体氛围和流畅度", "自己是否清晰表达了想法"] },
+            { question: "当朋友向你倾诉烦恼时，你通常会？", options: ["提供具体的建议和解决方案", "认真倾听并给予情感支持", "分享类似经历建立共鸣", "帮助分析问题的根源"] },
+            { question: "你如何处理与他人的分歧？", options: ["寻求共同点，求同存异", "深入讨论以达成共识", "尊重差异，保持距离", "根据关系重要性灵活处理"] },
+            
+            // 创造与思考类题目
+            { question: "当需要创意解决方案时，你会？", options: ["头脑风暴，生成多种可能", "从不同领域寻找灵感", "专注于一个方向深入思考", "结合已有经验进行创新"] },
+            { question: "你更喜欢哪种思考方式？", options: ["在行动中边做边想", "独处时深入思考", "与他人讨论激发灵感", "通过写作或其他方式整理思路"] },
+            { question: "对于规则和传统，你的态度是？", options: ["理解其存在的意义，但不盲从", "遵守大多数，但对不合理的提出质疑", "更多关注是否有效而非是否传统", "倾向于保持和传承有益的传统"] },
+            
+            // 生活态度类题目
+            { question: "你如何看待生活中的不确定性？", options: ["视为挑战和成长的机会", "尽量减少不确定性因素", "接受其不可避免，保持灵活性", "通过充分准备降低风险"] },
+            { question: "你更倾向于活在哪个时间维度？", options: ["关注未来的可能性和规划", "享受当下的每一刻体验", "从过去的经验中学习成长", "平衡兼顾过去、现在和未来"] },
+            { question: "面对生活中的取舍，你通常会如何选择？", options: ["权衡利弊后做出理性决定", "跟随内心直觉的指引", "优先考虑长期影响", "根据当前最紧迫的需求"] },
+            
+            // 兴趣偏好类题目
+            { question: "你更喜欢哪种类型的书籍？", options: ["能增长知识或技能的实用类", "富有想象力的小说或科幻作品", "启发思考的哲学或心理学书籍", "真实记录的传记或历史故事"] },
+            { question: "在艺术作品中，你更容易被什么打动？", options: ["作品传达的情感和故事", "作品的技巧和形式美", "作品引发的思考和共鸣", "作品的创新性和独特视角"] },
+            { question: "如果可以选择一个理想的居住环境，你会偏好？", options: ["繁华都市中的现代公寓", "宁静郊区的独立房屋", "自然风光环绕的乡村生活", "文化氛围浓厚的历史街区"] }
+        ];
+        
+        // 动物性格类型数据
+        const animalTypes = [
+            {
+                name: "老虎",
+                description: "你是一个天生的领导者，充满自信和决断力。你勇敢、直接，喜欢挑战，并且具有很强的竞争意识。你倾向于掌控局面，做事果断，不害怕承担责任。在团队中，你通常是那个带领大家前进的人。",
+                strengths: ["领导力强：你天生具有指引他人、制定战略的能力，能够在复杂情况下做出关键决策并引领团队前进", 
+                            "自信果断：你对自己的判断充满信心，能够快速分析形势并做出决定，不犹豫不决", 
+                            "勇敢坚韧：面对困难和挑战时，你展现出非凡的勇气和毅力，从不轻易退缩", 
+                            "目标明确：你总是清楚自己想要什么，并能够设定清晰的目标，坚定不移地追求", 
+                            "行动力强：你是一个行动派，善于将想法转化为实际行动，执行力出色"],
+                weaknesses: ["有时过于强势：在追求目标的过程中，你可能表现得过于强硬，给人压迫感", 
+                            "可能忽视他人感受：你的关注重点往往在任务和结果上，容易忽略团队成员的情绪需求", 
+                            "缺乏耐心：你希望快速看到结果，对那些进展缓慢的情况容易感到沮丧", 
+                            "控制欲较强：你喜欢掌控全局，对细节和过程有较高的要求，难以完全授权他人", 
+                            "对失败的容忍度低：你难以接受失败，甚至是小挫折，可能会因此给自己和团队带来不必要的压力"],
+                improvementTips: ["学会倾听他人意见：尝试给团队成员更多表达想法的机会，真正理解他们的观点和顾虑", 
+                                "培养耐心：学会欣赏过程中的小进步，理解成长和成功需要时间", 
+                                "注意团队协作的重要性：认识到团队的力量大于个人，学会信任并依靠团队成员", 
+                                "适当放松控制欲：尝试授权他人完成任务，给予团队成员成长和犯错的空间", 
+                                "接受失败是成长的一部分：将失败视为学习和改进的机会，而不是个人能力的否定"],
+
+                // 老虎照片
+                svg: `<img src="https://picsum.photos/id/1025/400/400" alt="老虎" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "海豚",
+                description: "你是一个善于社交、友好且富有同理心的人。你喜欢与人交往，善于沟通，总是愿意帮助他人。你性格开朗、积极向上，能够很好地适应不同的社交场合。在团队中，你是凝聚大家的关键人物。",
+                strengths: ["友善健谈：你天生具有亲和力，与人交往自然流畅，能够轻松建立起良好的人际关系", 
+                            "富有同理心：你能够敏锐地感知他人的情绪和需求，真诚地关心和理解他人", 
+                            "善于沟通：你表达清晰，倾听认真，能够有效地传递信息并建立共识", 
+                            "适应性强：你能够快速适应新环境和新变化，与不同背景的人建立良好关系", 
+                            "积极乐观：你总是看到事情好的一面，能够在困难中保持积极的心态，感染周围的人"],
+                weaknesses: ["可能过度关注他人需求：你常常将他人的需求放在自己之前，可能忽视自身的健康和幸福", 
+                            "有时缺乏主见：在面对不同意见时，你可能为了和谐而难以坚持自己的立场", 
+                            "对冲突感到不适：你不喜欢紧张和对抗的氛围，可能会回避必要的冲突和讨论", 
+                            "可能难以拒绝他人：你不想让别人失望，常常接受超出自己能力范围的请求", 
+                            "需要社交来获取能量：长时间的独处会让你感到疲惫，你需要通过社交活动来补充能量"],
+                improvementTips: ["学会关注自身需求：认识到照顾好自己是照顾他人的前提，优先考虑自己的健康和幸福", 
+                                "培养独立思考能力：在征求他人意见的同时，也要相信自己的判断和直觉", 
+                                "学习处理冲突的技巧：认识到建设性的冲突可以促进成长，学会以健康的方式表达分歧", 
+                                "适当设定个人边界：学会优雅地说'不'，明确自己的能力范围和底线", 
+                                "享受独处的时光：尝试在独处中找到平静和创造力，培养不需要社交也能充实的兴趣爱好"],
+
+                // 海豚照片
+                svg: `<img src="https://picsum.photos/id/1024/400/400" alt="海豚" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "猫头鹰",
+                description: "你是一个理性、善于思考的人。你喜欢深入分析问题，注重细节，并且有很强的观察力。你通常比较安静，但是思维敏锐，能够从复杂的情况中找到解决办法。在团队中，你是那个提供深度思考和专业建议的人。",
+                strengths: ["思维敏锐：你的思维方式独特而深刻，能够快速捕捉到问题的本质和关键点", 
+                            "注重细节：你对细节有着敏锐的洞察力，能够发现其他人可能忽略的重要信息和线索", 
+                            "理性客观：在分析问题时，你能够排除个人情感和偏见的干扰，保持理性和客观的态度", 
+                            "观察力强：你善于观察周围的环境和人的行为，从中获取有价值的信息和见解", 
+                            "善于分析：你能够将复杂的问题分解成易于理解的部分，并找出它们之间的关联和规律"],
+                weaknesses: ["可能过度思考：你有时会陷入过度分析的循环，导致决策延迟或行动犹豫不决", 
+                            "有时显得冷漠：你专注于逻辑和事实，可能在情感表达上有所欠缺，给人冷漠的印象", 
+                            "对不确定性容忍度低：你喜欢清晰、确定的答案，对模糊和不确定的情况感到不自在", 
+                            "完美主义倾向：你对自己和他人的要求过高，可能因为追求完美而忽略现实可行性", 
+                            "社交需求较少：你更享受独处和深度思考的时光，可能在社交场合显得不够热情"],
+                improvementTips: ["学会接受不完美：认识到现实世界中完美是不存在的，培养对'足够好'的容忍度", 
+                                "培养社交技能：尝试主动参与社交活动，提高与不同类型的人交流的能力", 
+                                "适当放松分析思维：学会在适当的时候放下分析，享受当下或接受直觉判断", 
+                                "关注整体而非仅细节：培养大局观，理解细节重要但整体目标同样关键", 
+                                "表达情感的重要性：尝试更开放地表达自己的感受，建立更深层次的人际关系"],
+
+                // 猫头鹰照片
+                svg: `<img src="https://picsum.photos/id/1059/400/400" alt="猫头鹰" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "考拉",
+                description: "你是一个温和、稳重的人。你喜欢安静的环境，注重生活品质，并且享受简单的快乐。你性格踏实，做事有条不紊，给人一种安心的感觉。在团队中，你是那个稳定可靠的成员，总是能够按时完成任务。",
+                strengths: ["温和友善：你性格温和，很少与人发生冲突，对他人总是表现出善意和关怀", 
+                            "稳重可靠：你做事踏实认真，给人一种安全感和信任感，是团队中值得依靠的成员", 
+                            "耐心细致：你做事有条不紊，注重细节，愿意投入时间完成好每一项任务", 
+                            "知足常乐：你能够从简单的事物中找到快乐和满足感，不盲目追求物质或成就", 
+                            "注重生活品质：你重视生活的质量，愿意为自己创造舒适、温馨的生活环境"],
+                weaknesses: ["可能过于保守：你习惯于传统和熟悉的方式，对新观念或新方法可能持保留态度", 
+                            "对变化的适应较慢：面对重大变化或新环境，你需要时间来调整和适应", 
+                            "有时缺乏主动性：你很少主动寻找新的挑战或机会，更倾向于等待而非争取", 
+                            "容易满足现状：你可能因为满足于当前的成就而缺乏进一步发展的动力", 
+                            "社交圈较小：你更喜欢与熟悉的人交往，社交圈相对固定且规模较小"],
+                improvementTips: ["尝试接受新事物：主动接触和了解新的观点、方法或技术，拓宽自己的视野", 
+                                "培养冒险精神：从小事做起，逐渐培养尝试新事物的勇气和开放的心态", 
+                                "主动参与社交活动：有意识地扩大社交圈，认识不同背景和观点的人", 
+                                "设定更高的目标：为自己设定有挑战性但可实现的目标，激发内在动力和成长欲望", 
+                                "学会快速适应变化：培养灵活的思维方式，提高应对变化和不确定性的能力"],
+
+                // 考拉照片
+                svg: `<img src="https://picsum.photos/id/1062/400/400" alt="考拉" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "孔雀",
+                description: "你是一个充满活力、喜欢表现自己的人。你性格开朗、热情，并且具有很强的创造力。你喜欢成为众人关注的焦点，善于表达自己的想法和感受。在团队中，你是那个带来活力和创意的人。",
+                strengths: ["充满活力：你总是精力充沛，能够给周围的人带来积极的能量和热情", 
+                            "创造力强：你有着丰富的想象力，善于提出创新的想法和解决方案", 
+                            "善于表达：你能够清晰、生动地表达自己的想法和情感，让人印象深刻", 
+                            "乐观开朗：你总是看到事情好的一面，能够在困难中保持积极的心态", 
+                            "魅力十足：你具有独特的个人魅力，能够吸引和影响他人"],
+                weaknesses: ["可能过于自我中心：在追求表现自己的过程中，你可能会忽视他人的需求和感受", 
+                            "有时缺乏深度：你可能更关注表面的华丽，而忽视了对问题的深入分析和理解", 
+                            "对批评敏感：你非常在意他人的看法，对批评和否定可能会产生强烈的情绪反应", 
+                            "注意力容易分散：你对新事物充满好奇，可能难以长时间专注于单一任务", 
+                            "做事可能不够踏实：你可能更关注创意和想法，而忽视了具体的执行和落实"],
+                improvementTips: ["学会倾听他人：真正关注和理解他人的想法和感受，不只是等待自己发言的机会", 
+                                "培养专注力：通过练习和技巧，提高自己长时间专注于重要任务的能力", 
+                                "接受建设性批评：认识到建设性的批评是成长的机会，学会以开放的心态接受", 
+                                "注重细节和执行力：将创意和想法转化为实际行动，关注具体的落实和细节", 
+                                "平衡自我表达与团队合作：在展示个人魅力的同时，重视团队合作和整体目标"],
+
+                // 孔雀照片
+                svg: `<img src="https://picsum.photos/id/1068/400/400" alt="孔雀" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "鹿",
+                description: "你性格温和、优雅，具有敏锐的直觉和很强的感知能力。你重视和谐的人际关系，善于倾听他人，并且具有高尚的道德标准。你向往自由，但也懂得在适当的时候保持谨慎。",
+                strengths: ["温和优雅：你待人接物温和有礼，举止优雅得体，给人留下良好的第一印象", 
+                            "直觉敏锐：你有着很强的直觉能力，能够在理性分析之前就感知到问题的本质和解决方案", 
+                            "善于倾听：你真正关心他人的想法和感受，能够全神贯注地倾听并给予理解和支持", 
+                            "道德高尚：你有着强烈的道德观念和原则，做事光明磊落，重视公平和正义", 
+                            "适应力强：你能够在不同环境中保持自己的风格和价值观，灵活应对各种挑战"],
+                weaknesses: ["有时过于敏感：你对他人的言行和态度非常敏感，可能会过度解读他人的无意之举", 
+                            "可能缺乏决断力：在面对重要决策时，你可能因为考虑过多因素而难以做出最终决定", 
+                            "容易犹豫不决：你可能会反复权衡利弊，导致决策时间过长或错过最佳时机", 
+                            "对冲突感到不适：你不喜欢对抗性的情境，可能会为了避免冲突而做出妥协或让步", 
+                            "可能过于理想化：你对人际关系和世界有着理想化的期望，可能会对现实感到失望"],
+                improvementTips: ["培养果断决策的能力：设定合理的决策时限，相信自己的判断和直觉", 
+                                "学会面对冲突：认识到健康的冲突可以促进理解和成长，学习有效的冲突解决策略", 
+                                "设定明确的个人边界：清楚自己的底线和原则，学会在必要时说'不'", 
+                                "适当降低对完美的追求：接受人和事的不完美，学会欣赏进步和成长的过程", 
+                                "增强自信心：认可自己的价值和能力，不要过分依赖他人的认可和评价"],
+
+                // 鹿照片
+                svg: `<img src="https://picsum.photos/id/1005/400/400" alt="鹿" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "狐獴",
+                description: "你是一个警觉性高、社交能力强的人。你善于团队合作，具有很强的沟通能力和观察能力。你能够快速适应环境变化，并且总是保持乐观积极的态度面对挑战。",
+                strengths: ["警觉性高：你对周围环境和变化保持高度警惕，能够及时发现潜在的风险和机会", 
+                            "社交能力强：你善于与人建立联系，能够轻松融入不同的社交场合和群体", 
+                            "团队合作：你重视集体的力量，善于在团队中发挥自己的优势，与他人协作完成目标", 
+                            "观察敏锐：你有着细致的观察力，能够注意到其他人可能忽略的细节和线索", 
+                            "适应性强：你能够快速适应新环境、新情况和新挑战，展现出很强的应变能力"],
+                weaknesses: ["可能过于好动：你精力充沛，有时可能难以长时间保持安静和专注", 
+                            "注意力容易分散：你对新事物和变化非常敏感，可能会因为外界干扰而分散注意力", 
+                            "有时过于依赖团队：你习惯了团队合作，在需要独立行动时可能会感到不适或缺乏信心", 
+                            "对风险过于敏感：你的警觉性可能导致你过度担心潜在的风险，有时甚至会阻碍行动", 
+                            "可能忽视细节：在追求效率和快速响应时，你可能会忽略一些重要的细节"],
+                improvementTips: ["培养专注力：通过练习冥想、时间管理等技巧，提高自己长时间专注于任务的能力", 
+                                "学会独立思考：在团队合作的同时，也要培养独立分析和解决问题的能力", 
+                                "平衡团队合作与个人空间：认识到团队合作和独立思考同等重要，学会在两者之间找到平衡", 
+                                "理性评估风险：学会客观分析风险的可能性和影响，避免过度担忧或忽视", 
+                                "注重细节处理：在追求效率的同时，也要注意工作的质量和细节，养成严谨的工作习惯"],
+
+                // 狐獴照片
+                svg: `<img src="https://picsum.photos/id/1019/400/400" alt="狐獴" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "狐狸",
+                description: "你机智过人、思维敏捷，具有很强的创造力和解决问题的能力。你善于观察细节，能够快速分析情况并做出决策。你独立自主，并且具有很强的适应能力。",
+                strengths: ["机智过人：你有着独特的智慧和洞察力，能够以创新的方式解决复杂问题", 
+                            "思维敏捷：你的思维速度快，能够迅速理解新信息并做出反应和判断", 
+                            "创造力强：你有着丰富的想象力和创意，能够提出新颖的想法和解决方案", 
+                            "善于分析：你能够深入分析问题的本质和各个方面，找出有效的解决途径", 
+                            "独立自主：你具有很强的独立性和自主性，能够在没有指导的情况下完成任务"],
+                weaknesses: ["可能过于狡猾：在追求目标的过程中，你可能会采用一些不够光明磊落的手段", 
+                            "有时缺乏耐心：你喜欢快速看到结果，对进展缓慢的情况容易感到沮丧和不耐烦", 
+                            "对他人信任度低：你倾向于依靠自己而非他人，可能对他人的能力和动机持怀疑态度", 
+                            "控制欲较强：你喜欢掌控局面，可能难以接受他人的不同意见或无法完全授权", 
+                            "可能忽视团队合作：你习惯于独立行动，有时可能会低估团队合作的价值和力量"],
+                improvementTips: ["培养信任感：学会信任他人，给予团队成员展现能力的机会，建立互信关系", 
+                                "学会耐心倾听：认真听取他人的意见和建议，不要急于打断或否定", 
+                                "增强团队协作意识：认识到团队合作可以带来更大的成就，学会与他人有效协作", 
+                                "适当放松控制欲：尝试让他人参与决策和执行过程，学会接受不同的工作方式", 
+                                "平衡个人与团队的关系：在发挥个人才能的同时，也要尊重团队的目标和需求，共同成长"],
+
+                // 狐狸照片
+                svg: `<img src="https://picsum.photos/id/1024/400/400" alt="狐狸" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "豺狼",
+                description: "你是一个勇敢、坚韧的人，具有很强的生存能力和竞争力。你善于制定策略，并且具有很强的执行力。你重视团队合作，同时也保持着个人的独立性和自主性。",
+                strengths: ["勇敢坚韧：你面对挑战和困难时展现出非凡的勇气和毅力，从不轻易退缩", 
+                            "策略性强：你善于分析形势，制定长远规划和有效策略，为实现目标铺平道路", 
+                            "执行力强：你有着出色的执行能力，能够将计划转化为实际行动并取得成果", 
+                            "团队合作：你懂得团队协作的力量，善于与他人合作，共同实现目标", 
+                            "独立性强：你保持着个人的独立性和自主性，能够在必要时独立行动并做出决策"],
+                weaknesses: ["可能过于激进：你追求目标的决心可能导致你采取过于激进的行动，忽视潜在风险", 
+                            "对他人要求严格：你对自己和他人都有很高的标准，可能会给团队成员带来压力", 
+                            "控制欲较强：你喜欢掌控局面和过程，可能难以完全授权他人或接受不同的工作方式", 
+                            "对失败容忍度低：你难以接受失败，甚至是小挫折，可能会因此给自己和他人带来不必要的压力", 
+                            "可能忽视情感需求：你专注于任务和目标，可能会忽视团队成员的情感需求和个人感受"],
+                improvementTips: ["学会控制情绪：在高压情况下保持冷静和理性，避免情绪波动影响判断和决策", 
+                                "培养同理心：尝试理解和关注他人的感受和需求，建立更深层次的人际关系", 
+                                "设定合理的期望：为自己和团队设定既有挑战性又切实可行的目标和标准", 
+                                "接受失败是成长的一部分：将失败视为学习和改进的机会，从中吸取经验教训", 
+                                "平衡工作与生活：认识到生活中除了工作和成就外，还有家庭、健康等重要方面需要关注"],
+
+                // 豺狼照片
+                svg: `<img src="https://picsum.photos/id/1027/400/400" alt="豺狼" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "兔子",
+                description: "你性格温顺、善良，具有很强的同理心和关爱他人的能力。你细致入微，善于照顾他人，并且总是保持着一颗纯真的心。你虽然看起来柔弱，但内心却有着坚强的意志力。",
+                strengths: ["温顺善良：你天性温和善良，对待他人充满爱心和关怀，很少表现出攻击性", 
+                            "同理心强：你能够敏锐地感知他人的情绪和需求，真诚地理解和关心他人", 
+                            "细致入微：你观察细致，能够注意到他人的细微需求和情绪变化", 
+                            "关爱他人：你总是乐于帮助和照顾他人，把他人的幸福放在重要位置", 
+                            "内心坚强：尽管外表看起来柔弱，但你内心有着坚韧的意志力，能够在困难中坚持下去"],
+                weaknesses: ["可能过于敏感：你对他人的言行和评价非常敏感，可能会过度解读或受到伤害", 
+                            "容易感到焦虑：面对压力和不确定性时，你可能会感到焦虑和不安", 
+                            "对冲突感到不适：你不喜欢对抗性的情境，可能会为了避免冲突而做出妥协或让步", 
+                            "决策能力较弱：在面对重要决策时，你可能因为考虑过多或担心后果而犹豫不决", 
+                            "可能过于依赖他人：你习惯了依赖他人的支持和指导，在独立行动时可能缺乏信心"],
+                improvementTips: ["培养抗压能力：通过学习放松技巧、积极思维等方式，提高应对压力和挑战的能力", 
+                                "学会面对冲突：认识到健康的冲突可以促进理解和成长，学习有效的沟通和冲突解决技巧", 
+                                "增强决策信心：相信自己的判断和能力，从小事做起，逐步培养果断决策的能力", 
+                                "发展独立性：尝试独立完成任务和解决问题，增强自信心和自主能力", 
+                                "设定个人目标：为自己设定明确的个人目标，培养自我导向和内在动力"],
+
+                // 兔子照片
+                svg: `<img src="https://picsum.photos/id/1023/400/400" alt="兔子" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "猫",
+                description: "你是一个独立、优雅的人，具有很强的个人魅力和独特的个性。你喜欢独处，但也懂得享受社交的乐趣。你注重生活品质，并且具有很强的自我保护意识。",
+                strengths: ["独立自主：你有着强烈的独立意识，能够自主思考和行动，不轻易依赖他人", 
+                            "优雅自信：你举止得体，气质优雅，对自己充满信心，展现出独特的魅力", 
+                            "魅力十足：你具有吸引他人的独特魅力和个性，能够在不知不觉中影响周围的人", 
+                            "注重品质：你对生活和工作有着较高的要求，追求品质和精致，不满足于平庸", 
+                            "自我保护：你有着很强的自我保护意识，懂得设定界限，保护自己的身心健康"],
+                weaknesses: ["可能过于自我中心：你的独立性可能导致你过于关注自己的需求和感受，忽视他人", 
+                            "有时难以接近：你独立的个性可能会给人一种难以接近或冷漠的印象", 
+                            "对规则和约束敏感：你不喜欢被过多的规则和约束限制，可能会对权威产生抵触情绪", 
+                            "决策可能主观：你有时可能会过于依赖直觉和个人感受，而忽视客观分析", 
+                            "社交需求变化大：你的社交需求可能会根据心情和环境而变化，有时热情有时冷淡"],
+                improvementTips: ["学会关注他人：在关注自己的同时，也要关心和理解他人的需求和感受", 
+                                "适当展示亲和力：在保持独立性的同时，展现出更多的亲和力和开放态度", 
+                                "平衡自由与责任：认识到自由和责任是相辅相成的，学会在规则内寻找自由", 
+                                "理性与直觉并重：在做决策时，结合理性分析和直觉判断，做出更全面的决定", 
+                                "培养稳定的社交习惯：建立一些稳定的社交习惯，保持与他人的联系和互动"],
+
+                // 猫照片
+                svg: `<img src="https://picsum.photos/id/1074/400/400" alt="猫" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "猎犬",
+                description: "你忠诚可靠、勤奋努力，具有很强的责任感和使命感。你善于听从指令，并且能够坚持不懈地完成任务。你重视家庭和团队，总是愿意为了保护他们而付出努力。",
+                strengths: ["忠诚可靠", "勤奋努力", "责任感强", "坚持不懈", "重视团队"],
+                weaknesses: ["可能过于顺从", "创新能力较弱", "对变化适应较慢", "有时过于严肃", "可能缺乏灵活性"],
+                improvementTips: ["培养创新思维", "学会独立思考", "增强适应能力", "适当放松心情", "提高灵活性"],
+                // 猎犬照片
+                svg: `<img src="https://picsum.photos/id/1025/400/400" alt="猎犬" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "猪",
+                description: "你性格温和、乐观，具有很强的适应能力和生活智慧。你懂得享受生活中的简单乐趣，并且总是保持着积极向上的心态。你重视家庭和朋友，并且愿意为他们付出。",
+                strengths: ["温和乐观", "适应能力强", "生活智慧", "重视感情", "心态积极"],
+                weaknesses: ["可能过于慵懒", "对自我要求不高", "缺乏行动力", "有时过于满足现状", "可能忽视细节"],
+                improvementTips: ["培养积极进取的精神", "设定更高的目标", "增强行动力", "注重细节处理", "保持适度的进取心"],
+                // 猪照片
+                svg: `<img src="https://picsum.photos/id/1084/400/400" alt="猪" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "骏马",
+                description: "你是一个充满活力、热情奔放的人，具有很强的领导能力和冒险精神。你向往自由，并且总是勇敢地追求自己的梦想。你具有很强的竞争力和卓越的表现能力。",
+                strengths: ["活力充沛", "热情奔放", "领导力强", "冒险精神", "竞争意识"],
+                weaknesses: ["可能过于急躁", "有时缺乏耐心", "控制欲较强", "对失败容忍度低", "可能忽视他人意见"],
+                improvementTips: ["培养耐心", "学会倾听他人意见", "适当放松控制欲", "接受失败的可能性", "平衡个人目标与团队合作"],
+                // 骏马照片
+                svg: `<img src="https://picsum.photos/id/1015/400/400" alt="骏马" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "麻雀",
+                description: "你性格活泼开朗、善于社交，具有很强的沟通能力和适应能力。你注重细节，并且能够在平凡的生活中发现美好。你虽然看起来渺小，但却有着顽强的生命力。",
+                strengths: ["活泼开朗", "社交能力强", "注重细节", "生命力顽强", "适应能力强"],
+                weaknesses: ["可能过于唠叨", "注意力容易分散", "对风险敏感", "有时过于在意他人看法", "可能缺乏远见"],
+                improvementTips: ["培养专注力", "学会简洁表达", "增强勇气面对挑战", "保持独立思考", "培养长远眼光"],
+                // 麻雀照片
+                svg: `<img src="https://picsum.photos/id/1047/400/400" alt="麻雀" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "雄鹰",
+                description: "你是一个志向远大、目光敏锐的人，具有很强的洞察力和领导能力。你勇敢果断，总是能够在关键时刻做出正确的决策。你向往自由，并且具有很强的独立自主精神。",
+                strengths: ["志向远大", "目光敏锐", "勇敢果断", "领导力强", "独立自主"],
+                weaknesses: ["可能过于孤傲", "对他人要求严格", "控制欲较强", "有时缺乏耐心", "可能忽视团队合作"],
+                improvementTips: ["培养团队精神", "学会欣赏他人", "增强耐心", "适当放松控制欲", "建立良好的人际关系"],
+                // 雄鹰照片
+                svg: `<img src="https://picsum.photos/id/1018/400/400" alt="雄鹰" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "变色龙",
+                description: "你是一个适应能力极强、善于变化的人。你能够根据不同的环境和情况调整自己的行为和态度。你具有很强的观察能力和模仿能力，并且总是能够很好地融入不同的社交场合。",
+                strengths: ["适应能力强", "善于观察", "模仿能力强", "社交灵活", "应变能力强"],
+                weaknesses: ["可能缺乏一致性", "难以展现真实自我", "对他人信任感低", "可能过于圆滑", "缺乏明确的个人立场"],
+                improvementTips: ["培养个人一致性", "展现真实自我", "建立信任关系", "保持真诚", "明确个人立场"],
+                // 变色龙照片
+                svg: `<img src="https://picsum.photos/id/1058/400/400" alt="变色龙" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "蛇",
+                description: "你性格冷静、理性，具有很强的思考能力和分析能力。你善于隐藏自己的真实想法，并且总是能够在关键时刻保持冷静。你具有很强的耐心和毅力，不达目的誓不罢休。",
+                strengths: ["冷静理性", "思考深刻", "善于分析", "耐心坚韧", "目标明确"],
+                weaknesses: ["可能过于封闭", "情感表达困难", "对他人警惕性高", "有时显得冷漠", "可能过于算计"],
+                improvementTips: ["学会表达情感", "建立信任关系", "增强同理心", "适当展现温柔一面", "减少过度算计"],
+                // 蛇照片
+                svg: `<img src="https://picsum.photos/id/1057/400/400" alt="蛇" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            },
+            {
+                name: "雪豹",
+                description: "你是一个神秘而优雅的人，具有很强的独立性和自我保护意识。你适应能力极强，能够在极端的环境中生存。你谨慎但勇敢，总是能够在关键时刻展现出惊人的力量和勇气。",
+                strengths: ["神秘优雅", "独立性强", "适应能力强", "谨慎勇敢", "意志力强"],
+                weaknesses: ["可能过于内向", "社交能力较弱", "对他人警惕性高", "有时显得冷漠", "可能缺乏团队合作"],
+                improvementTips: ["培养社交能力", "学会信任他人", "展现温柔一面", "增强团队合作", "适当表达情感"],
+                // 雪豹照片
+                svg: `<img src="https://picsum.photos/id/1075/400/400" alt="雪豹" style="width:200px; height:200px; border-radius:10px; object-fit:cover;"/>`
+            }
+        ];
+        
+        // 当前问题索引
+        let currentQuestionIndex = 0;
+        
+        // 用户答案
+        const userAnswers = [];
+        
+        // 页面元素
+        const questionContainer = document.getElementById('question-container');
+        const optionsContainer = document.getElementById('options-container');
+        const prevBtn = document.getElementById('prev-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const submitBtn = document.getElementById('submit-btn');
+        const resultContainer = document.getElementById('result-container');
+        const testHeader = document.getElementById('test-header');
+        const progressBar = document.getElementById('progress');
+        
+        // 显示当前问题
+        function displayQuestion() {
+            const question = questions[currentQuestionIndex];
+            questionContainer.innerHTML = `<p>${currentQuestionIndex + 1}. ${question.question}</p>`;
+            
+            optionsContainer.innerHTML = '';
+            question.options.forEach((option, index) => {
+                const optionDiv = document.createElement('div');
+                optionDiv.className = 'option';
+                optionDiv.innerHTML = `
+                    <input type="radio" name="question-${currentQuestionIndex}" id="option-${index}" value="${index}" ${userAnswers[currentQuestionIndex] === index ? 'checked' : ''}>
+                    <label for="option-${index}">${option}</label>
+                `;
+                optionsContainer.appendChild(optionDiv);
+            });
+            
+            // 更新进度条
+            updateProgressBar();
+            
+            // 更新导航按钮状态
+            updateNavigationButtons();
+        }
+        
+        // 更新进度条
+        function updateProgressBar() {
+            const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+            progressBar.style.width = `${progress}%`;
+        }
+        
+        // 更新导航按钮状态
+        function updateNavigationButtons() {
+            prevBtn.disabled = currentQuestionIndex === 0;
+            
+            if (currentQuestionIndex === questions.length - 1) {
+                nextBtn.style.display = 'none';
+                submitBtn.style.display = 'inline-block';
+            } else {
+                nextBtn.style.display = 'inline-block';
+                submitBtn.style.display = 'none';
+            }
+        }
+        
+        // 保存当前答案
+        function saveAnswer() {
+            const selectedOption = document.querySelector(`input[name="question-${currentQuestionIndex}"]:checked`);
+            if (selectedOption) {
+                userAnswers[currentQuestionIndex] = parseInt(selectedOption.value);
+            }
+        }
+        
+        // 计算测试结果
+        function calculateResult() {
+            // 性格维度得分
+            const scores = {
+                tiger: 0,     // 领导力、自信、决断力
+                dolphin: 0,   // 社交能力、同理心、友善
+                owl: 0,       // 分析能力、理性、注重细节
+                koala: 0,     // 稳重、耐心、温和
+                peacock: 0    // 创造力、表现力、活力
+            };
+            
+            // 根据答案分配分数
+            // 这里基于问题类型和选项进行评分
+            userAnswers.forEach((answer, index) => {
+                // 问题1: 社交倾向
+                if (index === 0) {
+                    if (answer === 0) scores.peacock += 1;
+                    else if (answer === 1) scores.owl += 1;
+                    else if (answer === 2) scores.koala += 1;
+                    else if (answer === 3) scores.dolphin += 1;
+                }
+                // 问题2: 问题解决方式
+                else if (index === 1) {
+                    if (answer === 0) scores.tiger += 1;
+                    else if (answer === 1) scores.owl += 1;
+                    else if (answer === 2) scores.dolphin += 1;
+                    else if (answer === 3) scores.koala += 1;
+                }
+                // 问题3: 工作环境偏好
+                else if (index === 2) {
+                    if (answer === 0) scores.peacock += 1;
+                    else if (answer === 1) scores.owl += 1;
+                    else if (answer === 2) scores.dolphin += 1;
+                    else if (answer === 3) scores.koala += 1;
+                }
+                // 问题4: 空闲时间活动
+                else if (index === 3) {
+                    if (answer === 0) scores.peacock += 1;
+                    else if (answer === 1) scores.owl += 1;
+                    else if (answer === 2) scores.dolphin += 1;
+                    else if (answer === 3) scores.koala += 1;
+                }
+                // 问题5: 决策方式
+                else if (index === 4) {
+                    if (answer === 0) scores.peacock += 1;
+                    else if (answer === 1) scores.owl += 1;
+                    else if (answer === 2) scores.koala += 1;
+                    else if (answer === 3) scores.dolphin += 1;
+                }
+                // 问题6: 面对批评的反应
+                else if (index === 5) {
+                    if (answer === 0) scores.tiger += 1;
+                    else if (answer === 1) scores.dolphin += 1;
+                    else if (answer === 2) scores.owl += 1;
+                    else if (answer === 3) scores.koala += 1;
+                }
+                // 问题7: 风险态度
+                else if (index === 6) {
+                    if (answer === 0) scores.peacock += 1;
+                    else if (answer === 1) scores.owl += 1;
+                    else if (answer === 2) scores.koala += 1;
+                    else if (answer === 3) scores.tiger += 1;
+                }
+                // 问题8: 团队角色
+                else if (index === 7) {
+                    if (answer === 0) scores.tiger += 1;
+                    else if (answer === 1) scores.koala += 1;
+                    else if (answer === 2) scores.dolphin += 1;
+                    else if (answer === 3) scores.owl += 1;
+                }
+                // 问题9: 时间管理
+                else if (index === 8) {
+                    if (answer === 0) scores.peacock += 1;
+                    else if (answer === 1) scores.owl += 1;
+                    else if (answer === 2) scores.koala += 1;
+                    else if (answer === 3) scores.tiger += 1;
+                }
+                // 问题10: 压力处理
+                else if (index === 9) {
+                    if (answer === 0) scores.tiger += 1;
+                    else if (answer === 1) scores.dolphin += 1;
+                    else if (answer === 2) scores.koala += 1;
+                    else if (answer === 3) scores.peacock += 1;
+                }
+                // 问题11: 对新想法的态度
+                else if (index === 10) {
+                    if (answer === 0) scores.peacock += 1;
+                    else if (answer === 1) scores.owl += 1;
+                    else if (answer === 2) scores.koala += 1;
+                    else if (answer === 3) scores.dolphin += 1;
+                }
+                // 问题12: 沟通方式
+                else if (index === 11) {
+                    if (answer === 0) scores.tiger += 1;
+                    else if (answer === 1) scores.dolphin += 1;
+                    else if (answer === 2) scores.koala += 1;
+                    else if (answer === 3) scores.owl += 1;
+                }
+                // 问题13: 冲突处理
+                else if (index === 12) {
+                    if (answer === 0) scores.tiger += 1;
+                    else if (answer === 1) scores.dolphin += 1;
+                    else if (answer === 2) scores.koala += 1;
+                    else if (answer === 3) scores.owl += 1;
+                }
+                // 问题14: 生活节奏
+                else if (index === 13) {
+                    if (answer === 0) scores.peacock += 1;
+                    else if (answer === 1) scores.owl += 1;
+                    else if (answer === 2) scores.koala += 1;
+                    else if (answer === 3) scores.dolphin += 1;
+                }
+                // 问题15: 规则看法
+                else if (index === 14) {
+                    if (answer === 0) scores.peacock += 1;
+                    else if (answer === 1) scores.koala += 1;
+                    else if (answer === 2) scores.tiger += 1;
+                    else if (answer === 3) scores.owl += 1;
+                }
+                // 问题16: 学习方式
+                else if (index === 15) {
+                    if (answer === 0) scores.tiger += 1;
+                    else if (answer === 1) scores.owl += 1;
+                    else if (answer === 2) scores.dolphin += 1;
+                    else if (answer === 3) scores.koala += 1;
+                }
+                // 问题17: 价值观
+                else if (index === 16) {
+                    if (answer === 0) scores.tiger += 1;
+                    else if (answer === 1) scores.dolphin += 1;
+                    else if (answer === 2) scores.koala += 1;
+                    else if (answer === 3) scores.peacock += 1;
+                }
+                // 问题18: 未来规划
+                else if (index === 17) {
+                    if (answer === 0) scores.tiger += 1;
+                    else if (answer === 1) scores.dolphin += 1;
+                    else if (answer === 2) scores.koala += 1;
+                    else if (answer === 3) scores.owl += 1;
+                }
+                // 问题19: 失败观
+                else if (index === 18) {
+                    if (answer === 0) scores.peacock += 1;
+                    else if (answer === 1) scores.dolphin += 1;
+                    else if (answer === 2) scores.koala += 1;
+                    else if (answer === 3) scores.owl += 1;
+                }
+                // 问题20: 社交关系重视
+                else if (index === 19) {
+                    if (answer === 0) scores.dolphin += 1;
+                    else if (answer === 1) scores.peacock += 1;
+                    else if (answer === 2) scores.koala += 1;
+                    else if (answer === 3) scores.owl += 1;
+                }
+            });
+            
+            // 找到最高分的动物类型
+            let maxScore = 0;
+            let animalType = "老虎";
+            
+            if (scores.tiger > maxScore) {
+                maxScore = scores.tiger;
+                animalType = "老虎";
+            }
+            if (scores.dolphin > maxScore) {
+                maxScore = scores.dolphin;
+                animalType = "海豚";
+            }
+            if (scores.owl > maxScore) {
+                maxScore = scores.owl;
+                animalType = "猫头鹰";
+            }
+            if (scores.koala > maxScore) {
+                maxScore = scores.koala;
+                animalType = "考拉";
+            }
+            if (scores.peacock > maxScore) {
+                maxScore = scores.peacock;
+                animalType = "孔雀";
+            }
+            
+            return animalType;
+        }
+        
+        // 显示测试结果
+        function displayResult() {
+            testHeader.style.display = 'none';
+            questionContainer.style.display = 'none';
+            optionsContainer.style.display = 'none';
+            document.getElementById('navigation-buttons').style.display = 'none';
+            document.getElementById('progress-bar').style.display = 'none';
+            resultContainer.style.display = 'block';
+            
+            // 获取动物性格类型
+            const animalType = calculateResult();
+            
+            // 查找对应的动物数据
+            const animalData = animalTypes.find(animal => animal.name === animalType);
+            
+            if (animalData) {
+                // 移除动物图像，将动物名称显示在原来图片的位置
+                // 显示动物名称并设置颜色
+                const animalNameElement = document.getElementById('animal-name');
+                animalNameElement.textContent = animalData.name;
+                // 增强动物名称的视觉效果，使其更加突出
+                animalNameElement.style.fontSize = '2.5em';
+                animalNameElement.style.textAlign = 'center';
+                animalNameElement.style.padding = '20px 0';
+                animalNameElement.style.fontWeight = 'bold';
+                
+                // 移除所有可能存在的颜色类
+                animalNameElement.className = '';
+                
+                // 根据动物名称添加对应的颜色类
+                const colorClasses = {
+                    '老虎': 'result-tiger-color',
+                    '海豚': 'result-dolphin-color',
+                    '猫头鹰': 'result-owl-color',
+                    '考拉': 'result-koala-color',
+                    '孔雀': 'result-peacock-color',
+                    '鹿': 'result-deer-color',
+                    '狐獴': 'result-meerkat-color',
+                    '狐狸': 'result-fox-color',
+                    '豺狼': 'result-wolf-color',
+                    '兔子': 'result-rabbit-color',
+                    '猫': 'result-cat-color',
+                    '猎犬': 'result-dog-color',
+                    '猪': 'result-pig-color',
+                    '骏马': 'result-horse-color',
+                    '麻雀': 'result-sparrow-color',
+                    '雄鹰': 'result-eagle-color',
+                    '变色龙': 'result-chameleon-color',
+                    '蛇': 'result-snake-color',
+                    '雪豹': 'result-snowleopard-color'
+                };
+                
+                if (colorClasses[animalData.name]) {
+                    animalNameElement.classList.add(colorClasses[animalData.name]);
+                } else {
+                    // 默认颜色
+                    animalNameElement.style.color = '#8a9fd1';
+                }
+                
+                // 分析匹配原因
+                let matchReason = '';
+                if (animalData.name === '老虎') {
+                    matchReason = '通过测试分析，您展现出了强烈的领导能力、决断力和自信，这些特点与老虎的王者风范高度匹配。您在面对挑战时展现出的勇气和坚韧不拔的精神是老虎性格的典型特征。';
+                } else if (animalData.name === '海豚') {
+                    matchReason = '通过测试分析，您展现出了极强的社交能力、同理心和智慧，这些特质与海豚的友善和聪明才智高度契合。您善于与人沟通并建立良好关系的能力是海豚性格的核心魅力。';
+                } else if (animalData.name === '猫头鹰') {
+                    matchReason = '通过测试分析，您展现出了卓越的分析能力、细致观察力和理性思维，这些特点与猫头鹰的睿智和洞察力高度一致。您注重细节、追求精确的思维方式是猫头鹰性格的典型表现。';
+                } else if (animalData.name === '考拉') {
+                    matchReason = '通过测试分析，您展现出了温和友善、耐心和稳定的特质，这些特点与考拉的悠闲和亲和力高度匹配。您重视和谐生活、享受当下的态度是考拉性格的核心魅力。';
+                } else if (animalData.name === '孔雀') {
+                    matchReason = '通过测试分析，您展现出了热情开朗、创造力强和表现力突出的特点，这些特质与孔雀的华丽和魅力高度契合。您擅长展现自我、吸引他人注意的能力是孔雀性格的典型特征。';
+                } else if (animalData.name === '鹿') {
+                    matchReason = '通过测试分析，您展现出了优雅、灵敏和谨慎的特质，这些特点与鹿的温顺和警觉性高度一致。您善于感知环境变化并做出适当反应的能力是鹿性格的典型表现。';
+                } else if (animalData.name === '狐獴') {
+                    matchReason = '通过测试分析，您展现出了团队合作精神、警觉性和适应性强的特点，这些特质与狐獴的社交性和群体协作能力高度契合。您在团队中扮演着重要角色，善于发现潜在风险。';
+                } else if (animalData.name === '狐狸') {
+                    matchReason = '通过测试分析，您展现出了聪明机智、灵活应变和独立思考的特质，这些特点与狐狸的狡猾和敏捷思维高度匹配。您善于找到解决问题的创新方法，展现出非凡的适应能力。';
+                } else if (animalData.name === '豺狼') {
+                    matchReason = '通过测试分析，您展现出了坚韧不拔、耐力十足和团队合作精神，这些特点与豺狼的群体协作和适应能力高度一致。您在面对困难时表现出的毅力和协作能力令人印象深刻。';
+                } else if (animalData.name === '兔子') {
+                    matchReason = '通过测试分析，您展现出了温柔、敏感和敏捷的特质，这些特点与兔子的胆小谨慎但又灵活机敏的性格高度契合。您善于察觉周围环境的变化，并能快速适应新情况。';
+                } else if (animalData.name === '猫') {
+                    matchReason = '通过测试分析，您展现出了独立自信、优雅神秘和敏锐直觉的特点，这些特质与猫的傲娇和洞察力高度匹配。您重视个人空间，同时又具备敏锐的观察力和独立解决问题的能力。';
+                } else if (animalData.name === '猎犬') {
+                    matchReason = '通过测试分析，您展现出了忠诚可靠、责任心强和敏锐感知的特质，这些特点与猎犬的忠实和执行力高度一致。您对承诺始终如一，并且能够专注于完成任务。';
+                } else if (animalData.name === '猪') {
+                    matchReason = '通过测试分析，您展现出了踏实稳重、乐观豁达和慷慨大方的特点，这些特质与猪的朴实无华和真诚友善高度契合。您注重实际，懂得享受生活中的简单快乐。';
+                } else if (animalData.name === '骏马') {
+                    matchReason = '通过测试分析，您展现出了自由奔放、活力四射和优雅高贵的特质，这些特点与骏马的洒脱和力量感高度匹配。您追求自由，同时又具备强大的内在动力和优雅的姿态。';
+                } else if (animalData.name === '麻雀') {
+                    matchReason = '通过测试分析，您展现出了适应力强、勤劳活泼和善于社交的特点，这些特质与麻雀的灵活多变和群体生活习性高度契合。您在任何环境中都能快速适应并找到自己的位置。';
+                } else if (animalData.name === '雄鹰') {
+                    matchReason = '通过测试分析，您展现出了远见卓识、独立自主和目标明确的特质，这些特点与雄鹰的锐利目光和高空视野高度一致。您能够站在更高角度思考问题，展现出非凡的洞察力和执行力。';
+                } else if (animalData.name === '变色龙') {
+                    matchReason = '通过测试分析，您展现出了极强的适应能力、灵活多变和观察力敏锐的特点，这些特质与变色龙的环境适应能力高度契合。您能够根据不同环境调整自己，展现出出色的灵活性。';
+                } else if (animalData.name === '蛇') {
+                    matchReason = '通过测试分析，您展现出了冷静沉着、深思熟虑和直觉敏锐的特质，这些特点与蛇的神秘感和洞察力高度匹配。您善于隐藏真实想法，同时又能敏锐地感知周围的变化。';
+                } else if (animalData.name === '雪豹') {
+                    matchReason = '通过测试分析，您展现出了神秘内敛、坚韧不拔和独立自强的特点，这些特质与雪豹的孤独而强大的形象高度契合。您能够在极端条件下生存并保持优雅，展现出非凡的适应能力。';
+                } else {
+                    matchReason = '通过测试分析，您展现出了与' + animalData.name + '特质高度匹配的性格特征。您的思维方式和行为模式与这种动物的典型特点有着深刻的相似性。';
+                }
+                
+                // 显示匹配原因
+                document.getElementById('personality-description').innerHTML = `
+                    <h4>匹配原因</h4>
+                    <p>${matchReason}</p>
+                    <h4>性格描述</h4>
+                    <p>${animalData.description}</p>
+                `;
+                
+                // 显示优点
+                let strengthsHtml = '<h4>优点</h4><ul>';
+                animalData.strengths.forEach(strength => {
+                    strengthsHtml += `<li>${strength}</li>`;
+                });
+                strengthsHtml += '</ul>';
+                document.getElementById('strengths').innerHTML = strengthsHtml;
+                
+                // 显示缺点
+                let weaknessesHtml = '<h4>需要注意的方面</h4><ul>';
+                animalData.weaknesses.forEach(weakness => {
+                    weaknessesHtml += `<li>${weakness}</li>`;
+                });
+                weaknessesHtml += '</ul>';
+                document.getElementById('weaknesses').innerHTML = weaknessesHtml;
+                
+                // 显示改进建议
+                let tipsHtml = '<h4>改进建议</h4><ul>';
+                animalData.improvementTips.forEach(tip => {
+                    tipsHtml += `<li>${tip}</li>`;
+                });
+                tipsHtml += '</ul>';
+                document.getElementById('improvement-tips').innerHTML = tipsHtml;
+                
+                // 添加推荐职业部分
+                let careerAdvice = '';
+                if (animalData.name === '老虎') {
+                    careerAdvice = '企业高管、项目经理、创业者、销售总监、军事指挥官、体育教练';
+                } else if (animalData.name === '海豚') {
+                    careerAdvice = '心理咨询师、社会工作者、教师、公关专员、人力资源管理、客户服务经理';
+                } else if (animalData.name === '猫头鹰') {
+                    careerAdvice = '科学家、工程师、数据分析师、会计师、法律顾问、研究员';
+                } else if (animalData.name === '考拉') {
+                    careerAdvice = '图书管理员、编辑、行政助理、护士、瑜伽教练、园艺师';
+                } else if (animalData.name === '孔雀') {
+                    careerAdvice = '演员、艺术家、营销总监、主持人、公关经理、广告创意';
+                } else if (animalData.name === '鹿') {
+                    careerAdvice = '设计师、舞蹈家、翻译、礼仪培训师、环保工作者、自然摄影师';
+                } else if (animalData.name === '狐獴') {
+                    careerAdvice = '团队领导、安全分析师、风险管理师、警察、侦察员、户外活动教练';
+                } else if (animalData.name === '狐狸') {
+                    careerAdvice = '市场营销、战略顾问、创意总监、销售代表、企业家、谈判专家';
+                } else if (animalData.name === '豺狼') {
+                    careerAdvice = '军队、救援队、马拉松运动员、项目协调员、户外向导、团队教练';
+                } else if (animalData.name === '兔子') {
+                    careerAdvice = '幼儿园教师、宠物美容师、营养师、园艺师、手工艺人、办公室助理';
+                } else if (animalData.name === '猫') {
+                    careerAdvice = '艺术家、设计师、程序员、自由职业者、作家、顾问';
+                } else if (animalData.name === '猎犬') {
+                    careerAdvice = '侦探、安保人员、搜救队员、海关官员、法律顾问、客户经理';
+                } else if (animalData.name === '猪') {
+                    careerAdvice = '厨师、美食评论家、社会工作者、心理咨询师、人力资源、非营利组织工作者';
+                } else if (animalData.name === '骏马') {
+                    careerAdvice = '运动员、探险家、旅行博主、自由职业者、销售经理、市场拓展';
+                } else if (animalData.name === '麻雀') {
+                    careerAdvice = '市场研究员、活动策划、客户服务、教学助理、行政协调、社区工作者';
+                } else if (animalData.name === '雄鹰') {
+                    careerAdvice = 'CEO、战略规划师、飞行员、投资顾问、大学教授、科研带头人';
+                } else if (animalData.name === '变色龙') {
+                    careerAdvice = '外交家、国际商务、文化交流、谈判专家、市场分析师、多语言翻译';
+                } else if (animalData.name === '蛇') {
+                    careerAdvice = '心理咨询师、分析师、战略规划、情报工作、医学研究者、金融顾问';
+                } else if (animalData.name === '雪豹') {
+                    careerAdvice = '登山向导、野生动物保护、极限运动教练、独立研究员、私人顾问、艺术家';
+                } else {
+                    careerAdvice = '根据您的具体兴趣和技能，可以在多个领域找到适合自己的职业发展方向。';
+                }
+                
+                // 创建推荐职业区域（如果不存在）
+                if (!document.getElementById('career-recommendations')) {
+                    const careerSection = document.createElement('div');
+                    careerSection.id = 'career-recommendations';
+                    careerSection.style.backgroundColor = '#f9f9f9';
+                    careerSection.style.borderRadius = '12px';
+                    careerSection.style.padding = '25px';
+                    careerSection.style.marginBottom = '20px';
+                    careerSection.style.textAlign = 'left';
+                    careerSection.style.borderLeft = '5px solid #8a9fd1';
+                    careerSection.style.boxShadow = '0 4px 15px rgba(0,0,0,0.05)';
+                    resultContainer.appendChild(careerSection);
+                }
+                
+                // 显示推荐职业
+                document.getElementById('career-recommendations').innerHTML = `
+                    <h4>推荐职业</h4>
+                    <p style="font-size: 1.1em; line-height: 1.7; color: #666; font-weight: 600;">${careerAdvice}</p>
+                `;
+            }
+        }
+        
+        // 事件监听器
+        prevBtn.addEventListener('click', () => {
+            saveAnswer();
+            currentQuestionIndex--;
+            displayQuestion();
+        });
+        
+        nextBtn.addEventListener('click', () => {
+            saveAnswer();
+            currentQuestionIndex++;
+            displayQuestion();
+        });
+        
+        submitBtn.addEventListener('click', () => {
+            saveAnswer();
+            displayResult();
+        });
+        
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.length = 0;
+            resultContainer.style.display = 'none';
+            testHeader.style.display = 'block';
+            questionContainer.style.display = 'block';
+            optionsContainer.style.display = 'block';
+            document.getElementById('navigation-buttons').style.display = 'block';
+            document.getElementById('progress-bar').style.display = 'block';
+            displayQuestion();
+        });
+        
+        // 添加开始测试按钮的事件监听器
+        document.getElementById('start-test-btn').addEventListener('click', () => {
+            document.getElementById('cover-page').style.display = 'none';
+            document.getElementById('test-content').style.display = 'block';
+            displayQuestion();
+        });
+        
+        // 添加重新测试按钮的修改，让它回到封面
+        document.getElementById('restart-btn').addEventListener('click', () => {
+            currentQuestionIndex = 0;
+            userAnswers.length = 0;
+            resultContainer.style.display = 'none';
+            document.getElementById('test-content').style.display = 'none';
+            document.getElementById('cover-page').style.display = 'block';
+            // 重置UI状态
+            testHeader.style.display = 'block';
+            questionContainer.style.display = 'block';
+            optionsContainer.style.display = 'block';
+            document.getElementById('navigation-buttons').style.display = 'block';
+            document.getElementById('progress-bar').style.display = 'block';
+        });
+        
+        // 初始化页面，显示封面（不需要立即显示第一题）
+    </script>
+</body>
+</html>
